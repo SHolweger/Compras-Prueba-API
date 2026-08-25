@@ -5,7 +5,7 @@ namespace App\Enums;
 enum TrayId: int
 {
     case Review = 1;                 // Bandeja de revisión
-    case Stock = 2;                  // Bandeja de bodega
+    case StockCheck = 2;                  // Bandeja de bodega
     case Quotation = 3;              // Bandeja de cotizaciones
     case BudgetAvailability = 4;     // Bandeja de disponibilidad presupuestaria
     case FormPrinting = 5;           // Bandeja de impresión de formularios

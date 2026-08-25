@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\CaseStatus;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -44,6 +47,37 @@ class ProcurementCase extends Model
         ];
     }
 
+    // SCOPE para filtrar los casos de compra por el usuario propietario
+    #[Scope]
+    protected function ownedBy(Builder $query, int $userId): void
+    {
+        $query->where('user_id', $userId);
+    }
+
+    // SCOPE para filtrar los casos de compra por el estatus
+    #[Scope]
+    protected function withStatus(Builder $query, CaseStatus $status): void
+    {
+        $query->where('status_id', $status->value);
+    }
+
+    // SCOPE para filtrar los casos de compra por el término de búsqueda 
+    #[Scope]
+    protected function search(Builder $query, ?string $term): void
+    {
+        if ($term) {
+            $query->where(function ($query) use ($term) {
+                $query->Where('title', 'ilike', "%{$term}%")                          //filtrar por título
+                    ->orWhere('description', 'ilike', "%{$term}%");                   //filtrar por descripción
+                   // ->orWhere('justification', 'ilike', "%{$term}%")                //filtrar por justificación
+                   // ->orWhere('nog_number', 'ilike', "%{$term}%")                   //filtrar por número de NOG
+                   // ->orWhere('check_number', 'ilike', "%{$term}%")                 //filtrar por número de cheque
+                   // ->orWhere('budget_line_reference', 'ilike', "%{$term}%");       //filtrar por referencia de línea presupuestaria
+            });
+        }
+    }
+
+    // Relaciones
     public function status(): BelongsTo
     {
         return $this->belongsTo(Status::class);

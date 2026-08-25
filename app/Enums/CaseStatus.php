@@ -8,7 +8,7 @@ enum CaseStatus: int
     case InProcess = 2;               //En proceso
     case FinishedByStock = 3;         //Finalizado por bodega
     case FinishedWithoutBudget = 4;   //Finalizado sin presupuesto
-    case FinishedBySuspension = 5 ;   //Finalizado por suspensión
+    case FinishedBySuspension = 5;    //Finalizado por suspensión
     case Awarded = 6;                 //Adjudicado
     case Rejected = 7;                //Rechazado
     case FinishedVoided = 8;          //Finalizado anulado
