@@ -33,4 +33,13 @@ class SupplyItemService
     {
         $supplyItem->delete();
     }
+
+    // consulta.php accion 56 - presentaciones de un codigo de insumo
+    public function byCode(int $code): \Illuminate\Database\Eloquent\Collection
+    {
+        return SupplyItem::query()
+            ->where('code', $code)
+            ->orderBy('presentation_code')
+            ->get(['id', 'code', 'name', 'presentation', 'unit_of_measure', 'presentation_code']);
+    }
 }

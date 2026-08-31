@@ -46,4 +46,10 @@ class UnitController extends Controller
 
         return response()->json(null, 204);
     }
+
+    // GET /api/units/mine
+    public function mine(Request $request)
+    {
+        return response()->json($this->service->listForUser($this->userId($request)));
+    }
 }

@@ -56,4 +56,10 @@ class SupplyItemController extends Controller
 
         return response()->json(null, 204);
     }
+
+    // GET /api/supply-items/by-code/{code}
+    public function byCode(int $code) // Metodo para obtener las presentaciones de un codigo de insumo
+    {
+        return response()->json($this->service->byCode($code));
+    }
 }

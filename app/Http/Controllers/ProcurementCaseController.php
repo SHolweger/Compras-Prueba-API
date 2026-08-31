@@ -2,84 +2,92 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CaseProduct\StoreCaseProductRequest;
+use App\Http\Requests\ProcurementCase\StoreProcurementCaseRequest;
+use App\Http\Requests\ProcurementCase\UpdateProcurementCaseRequest;
+use App\Models\CaseProduct;
 use App\Models\ProcurementCase;
 use App\Services\ProcurementCaseService;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class ProcurementCaseController extends Controller
 {
     public function __construct(protected ProcurementCaseService $service) {}
 
-    public function index()
+    // consulta.php accion 2 - GET /api/procurement-cases?search=&per_page=
+    public function index(Request $request)
     {
-        return response()->json($this->service->list());
+        return response()->json($this->service->drafts(
+            $this->userId($request),
+            $request->query('search'),
+            (int) $request->query('per_page', 25),
+        ));
     }
 
-    public function store(Request $request)
+    // ingresa.php accion 1 - POST /api/procurement-cases
+    public function store(StoreProcurementCaseRequest $request)
     {
-        $data = $request->validate([
-            'status_id' => ['required', 'integer', 'exists:statuses,id'],
-            'unit_id' => ['required', 'integer', 'exists:units,id'],
-            'user_id' => ['required', 'integer'],
-            'tray_id' => ['nullable', 'integer', 'exists:trays,id'],
-            'modality_id' => ['nullable', 'integer', 'exists:modalities,id'],
-            'budget_object_id' => ['nullable', 'integer', 'exists:budget_objects,id'],
-            'supplier_id' => ['nullable', 'integer', 'exists:suppliers,id'],
-            'form_number' => ['nullable', 'string', 'max:45', 'unique:procurement_cases,form_number'],
-            'title' => ['nullable', 'string', 'max:150'],
-            'description' => ['nullable', 'string'],
-            'justification' => ['nullable', 'string'],
-            'nog_number' => ['nullable', 'string', 'max:45'],
-            'amount' => ['nullable', 'numeric'],
-            'submitted_at' => ['nullable', 'date'],
-            'completed_at' => ['nullable', 'date'],
-            'check_number' => ['nullable', 'string', 'max:150'],
-            'budget_line_reference' => ['nullable', 'string', 'max:50'],
-            'is_suspended' => ['nullable', 'boolean'],
-            'is_endorsed' => ['nullable', 'boolean'],
-            'responsible_user_id' => ['nullable', 'integer'],
-        ]);
-
-        return response()->json($this->service->create($data), 201);
+        return response()->json(
+            $this->service->createDraft($request->validated(), $this->userId($request)),
+            201
+        );
     }
 
-    public function show(ProcurementCase $procurementCase)
+    // GET /api/procurement-cases/{id}
+    public function show(Request $request, ProcurementCase $procurementCase)
     {
+        abort_unless($procurementCase->user_id === $this->userId($request), 404);
+
         return response()->json($this->service->find($procurementCase->id));
     }
 
-    public function update(Request $request, ProcurementCase $procurementCase)
+    // actualiza.php accion 1 - PUT /api/procurement-cases/{id}
+    public function update(UpdateProcurementCaseRequest $request, ProcurementCase $procurementCase)
     {
-        $data = $request->validate([
-            'status_id' => ['sometimes', 'integer', 'exists:statuses,id'],
-            'unit_id' => ['sometimes', 'integer', 'exists:units,id'],
-            'user_id' => ['sometimes', 'integer'],
-            'tray_id' => ['nullable', 'integer', 'exists:trays,id'],
-            'modality_id' => ['nullable', 'integer', 'exists:modalities,id'],
-            'budget_object_id' => ['nullable', 'integer', 'exists:budget_objects,id'],
-            'supplier_id' => ['nullable', 'integer', 'exists:suppliers,id'],
-            'form_number' => ['nullable', 'string', 'max:45', Rule::unique('procurement_cases', 'form_number')->ignore($procurementCase->id)],
-            'title' => ['nullable', 'string', 'max:150'],
-            'description' => ['nullable', 'string'],
-            'justification' => ['nullable', 'string'],
-            'nog_number' => ['nullable', 'string', 'max:45'],
-            'amount' => ['nullable', 'numeric'],
-            'submitted_at' => ['nullable', 'date'],
-            'completed_at' => ['nullable', 'date'],
-            'check_number' => ['nullable', 'string', 'max:150'],
-            'budget_line_reference' => ['nullable', 'string', 'max:50'],
-            'is_suspended' => ['nullable', 'boolean'],
-            'is_endorsed' => ['nullable', 'boolean'],
-            'responsible_user_id' => ['nullable', 'integer'],
-        ]);
-
-        return response()->json($this->service->update($procurementCase, $data));
+        return response()->json($this->service->updateDraft(
+            $procurementCase,
+            $request->validated(),
+            $this->userId($request)
+        ));
     }
 
-    public function destroy(ProcurementCase $procurementCase)
+    // borra.php accion 1 - DELETE /api/procurement-cases/{id}
+    public function destroy(Request $request, ProcurementCase $procurementCase)
     {
-        $this->service->delete($procurementCase);
+        $this->service->deleteDraft($procurementCase, $this->userId($request));
+
+        return response()->json(null, 204);
+    }
+
+    // ingresa.php accion 3 - POST /api/procurement-cases/{id}/submit
+    public function submit(Request $request, ProcurementCase $procurementCase)
+    {
+        return response()->json(
+            $this->service->submitToReview($procurementCase, $this->userId($request))
+        );
+    }
+
+    // consulta.php accion 3 - GET /api/procurement-cases/{id}/products
+    public function products(Request $request, ProcurementCase $procurementCase)
+    {
+        return response()->json(
+            $this->service->products($procurementCase, $this->userId($request))
+        );
+    }
+
+        // ingresa.php accion 2 - POST /api/procurement-cases/{id}/products
+    public function addProduct(StoreCaseProductRequest $request, ProcurementCase $procurementCase)
+    {
+        return response()->json(
+            $this->service->addProduct($procurementCase, $request->validated(), $this->userId($request)),
+            201
+        );
+    }
+
+    // borra.php accion 2 - DELETE /api/procurement-cases/{id}/products/{productId}
+    public function removeProduct(Request $request, ProcurementCase $procurementCase, CaseProduct $caseProduct)
+    {
+        $this->service->removeProduct($procurementCase, $caseProduct, $this->userId($request));
 
         return response()->json(null, 204);
     }

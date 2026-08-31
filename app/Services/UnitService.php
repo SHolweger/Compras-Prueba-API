@@ -33,4 +33,14 @@ class UnitService
     {
         $unit->delete();
     }
+
+    // consulta.php accion 1 - Unidades activas del usuario
+    public function listForUser(int $userId): \Illuminate\Database\Eloquent\Collection
+    {
+        return Unit::query()
+            ->active()
+            ->forUser($userId)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+    }
 }
