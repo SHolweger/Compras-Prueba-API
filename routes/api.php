@@ -53,6 +53,7 @@ Route::middleware('jwt.security')->group(function () {
     Route::apiResource('works', WorkController::class);
 
     // Catálogos organizativos y de flujo
+    Route::get('units/mine', [UnitController::class, 'mine']);
     Route::apiResource('units', UnitController::class);
     Route::apiResource('unit-users', UnitUserController::class);
     Route::apiResource('statuses', StatusController::class);
@@ -66,6 +67,7 @@ Route::middleware('jwt.security')->group(function () {
 
     // Maestros
     Route::apiResource('suppliers', SupplierController::class);
+    Route::get('supply-items/by-code/{code}', [SupplyItemController::class, 'byCode'])->whereNumber('code');
     Route::apiResource('supply-items', SupplyItemController::class);
 
     // Transaccional (expedientes de compra)
@@ -77,4 +79,9 @@ Route::middleware('jwt.security')->group(function () {
     Route::apiResource('case-tasks', CaseTaskController::class);
     Route::apiResource('budget-allocations', BudgetAllocationController::class);
     Route::apiResource('budget-allocation-objects', BudgetAllocationObjectController::class);
+    // Solicitud de compra - acciones que no encajan en REST estandar
+    Route::post('procurement-cases/{procurementCase}/submit', [ProcurementCaseController::class, 'submit']);
+    Route::get('procurement-cases/{procurementCase}/products', [ProcurementCaseController::class, 'products']);
+    Route::post('procurement-cases/{procurementCase}/products', [ProcurementCaseController::class, 'addProduct']);
+    Route::delete('procurement-cases/{procurementCase}/products/{caseProduct}', [ProcurementCaseController::class, 'removeProduct']);
 });

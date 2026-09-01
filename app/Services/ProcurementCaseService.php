@@ -56,7 +56,7 @@ class ProcurementCaseService
             ->withCount('caseProducts')
             ->ownedBy($userId)
             ->withStatus(CaseStatus::Draft)
-            ->whereYear('created_at', now()->year)
+            ->whereYear('submitted_at', now()->year)
             ->search($search)
             ->orderByDesc('id')
             ->paginate($perPage);
@@ -69,6 +69,7 @@ class ProcurementCaseService
             ...$data,
             'status_id' => CaseStatus::Draft->value,
             'user_id' => $userId,
+            'submitted_at' => now(),
         ]);
     }
 

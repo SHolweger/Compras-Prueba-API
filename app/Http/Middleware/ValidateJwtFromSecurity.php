@@ -25,7 +25,7 @@ class ValidateJwtFromSecurity
             return response()->json(['message' => 'Token inválido'], 401);
         }
 
-        $request->attributes->set('api-security-user', $response->json('user'));
+        $request->attributes->set('api-security-user', $response->json());
 
         return $next($request);
     }
